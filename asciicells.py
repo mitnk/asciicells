@@ -1,115 +1,179 @@
+"""
+A Simple ASCII Table Generator.
+
+By mitnk (w@mitnk.com)
+MIT License
+"""
+
+import argparse
+import csv
+import fileinput
+import itertools
+import os.path
 import re
 from collections import defaultdict
-import itertools
 
 
 CROSS = '+'
 HORIZ = '-'
 VERTI = '|'
-MAX_WIDTH = 72
-MIN_CELL_WIDTH = 10
-
-def get_width_info(L):
-    info = defaultdict(int)
-    for row in L:
-        for item, i in zip(row, itertools.count()):
-            if len(item) > info[i]:
-                info[i] = len(item)
-    width_extra = len(info) * 3 + 1
-    info['width'] = sum(info.values()) + width_extra
-    if info['width'] > MAX_WIDTH:
-        info['width'] = MAX_WIDTH
-
-    index_to_wrap = itertools.count()
-    while sum([info[i] for i in range(len(L[0]))]) > info['width'] - width_extra:
-        index = index_to_wrap.__next__() % len(L[0])
-        if info[index] <= MIN_CELL_WIDTH:
-            continue
-        info[index] -= 1
-    return info
+MAX_TABLE_WIDTH = 72
+MIN_CELL_WIDTH = 12
 
 
-def _get_empty_row(token):
-    return re.sub(r'[^{}]'.format(VERTI), ' ', token)
+class AsciiCells(object):
+    def __init__(self, header=False):
+        self.header = header
+        self.orphans = defaultdict(str)
+
+    def get_width_info(self, L):
+        count_max = 0
+        info = defaultdict(int)
+        for row in L:
+            for item, i in zip(row, itertools.count()):
+                if '\t' in item:
+                    item = re.sub('\t', '    ', item)
+                if i + 1 > count_max:
+                    count_max = i + 1
+                if len(item) > info[i]:
+                    info[i] = len(item)
+
+        for row in L:  # align columns in all rows
+            span = count_max - len(row)
+            if span > 0:
+                row.append(' ')
+
+        width_extra = len(info) * 3 + 1
+        info['width'] = sum(info.values()) + width_extra
+        if info['width'] > MAX_TABLE_WIDTH:
+            info['width'] = MAX_TABLE_WIDTH
+
+        index_to_wrap = itertools.count()
+        while sum([info[i] for i in range(len(L[0]))]) > info['width'] - width_extra:
+            index = next(index_to_wrap) % len(L[0])
+            if info[index] <= MIN_CELL_WIDTH:
+                continue
+            info[index] -= 1
+        return info
 
 
-def _split_column_str(column, width):
-    return column[:width], column[width:]
+    def _get_empty_row(self, token, char=' '):
+        empty_row = re.sub(r'[^{}]'.format(VERTI), char, token)
+        if char != ' ':
+            empty_row = re.sub(r'[{}]'.format(VERTI), CROSS, empty_row)
+        return empty_row
 
 
-def _get_normal_row(item_list, width_info, orphans):
-    token = VERTI
-    if isinstance(item_list, defaultdict):
-        item_list = [item_list[i] for i in range(len(item_list))]
-    for item, i in zip(item_list, itertools.count()):
-        if len(item) > width_info[i]:
-            padding = ''
-            str_curr, str_left = _split_column_str(item, width_info[i])
-            orphans[i] = str_left
-        else:
-            padding = ' ' * (width_info[i] - len(item))
-            str_curr = item
-            orphans[i] = ''
-        token += ' {}{} {}'.format(str_curr, padding, VERTI)
-    return token
+    def _hard_split(self, column, width, word_break=False):
+        if word_break:
+            return column[:width-1] + '-', column[width-1:]
+        return column[:width], column[width:]
+
+    def _split_column_str(self, column, width):
+        if ' ' not in column.strip():
+            return self._hard_split(column, width)
+        index_split = 0
+        for i in range(len(column)):
+            if i > width:
+                break
+            if column[i] == ' ':
+                index_split = i
+        if index_split == 0:
+            return self._hard_split(column, width, word_break=True)
+        return column[:index_split], column[index_split:]
 
 
-def _are_orphans_left(orphans):
-    for k in orphans:
-        if len(orphans[k]) > 0:
-            return True
-    return False
+    def _get_normal_row(self, item_list, width_info):
+        token = VERTI
+        if isinstance(item_list, defaultdict):
+            item_list = [item_list[i] for i in range(len(item_list))]
+        for item, i in zip(item_list, itertools.count()):
+            if '\t' in item:
+                item = re.sub('\t', '    ', item)
+            item = item.strip()
+            width = width_info[i]
+            if len(item) > width:
+                padding = ''
+                str_curr, str_remaining = self._split_column_str(item, width)
+                str_curr = str_curr.strip()
+                if len(str_curr) < width:
+                    str_curr += ' ' * (width - len(str_curr))
+                self.orphans[i] = str_remaining
+            else:
+                padding = ' ' * (width_info[i] - len(item))
+                if item.startswith(' '):
+                    str_curr = item[1:] + ' '
+                else:
+                    str_curr = item
+                self.orphans[i] = ''
+            token += ' {}{} {}'.format(str_curr, padding, VERTI)
+        return token
 
 
-def get_table(L):
-    info_w = get_width_info(L)
-    width = info_w['width']
+    def _are_orphans_left(self):
+        for k in self.orphans:
+            if len(self.orphans[k]) > 0:
+                return True
+        return False
 
-    rows = []
-    orphans = defaultdict(str)
-    for item_list in L:
-        token = _get_normal_row(item_list, info_w, orphans)
-        rows.append(token)
-        while _are_orphans_left(orphans):
-            token = _get_normal_row(orphans, info_w, orphans)
+
+    def render(self, L):
+        info_w = self.get_width_info(L)
+        width = info_w['width']
+
+        rows = []
+        for item_list, i in zip(L, itertools.count()):
+            token = self._get_normal_row(item_list, info_w)
             rows.append(token)
-        rows.append(_get_empty_row(token))
+            while self._are_orphans_left():
+                token = self._get_normal_row(self.orphans, info_w)
+                rows.append(token)
+            if self.header and i == 0:
+                rows.append(self._get_empty_row(token, char='-'))
+            else:
+                rows.append(self._get_empty_row(token))
 
-    rows.pop()  # pop out the last empty row
+        # pop out the last empty row
+        rows.pop()
 
-    cross_indexes = set([])
-    for c, i in zip(rows[0], itertools.count()):
-        if c == VERTI:
-            cross_indexes.add(i)
-    border = ''
-    for i in range(width):
-        if i in cross_indexes:
-            border += CROSS
-        else:
-            border += HORIZ
-    rows.insert(0, border)
-    rows.append(border)
-    return '\n'.join(rows)
+        # add top and bottom borders
+        border = ''
+        cross_indexes = set([])
+        for c, i in zip(rows[0], itertools.count()):
+            if c == VERTI:
+                cross_indexes.add(i)
+        for i in range(width):
+            if i in cross_indexes:
+                border += CROSS
+            else:
+                border += HORIZ
+        rows.insert(0, border)
+        rows.append(border)
+
+        return '\n'.join(rows)
 
 
 if __name__ == '__main__':
-    L1 = list(itertools.permutations(['1', 'ascii', 'this is a test'], 3))
-    L2 = [
-        [
-            'it must be continuously available',
-            'In 2011, millions of people began to use the China Railways '
-                'website on a daily basis and the system began experiencing '
-                'problems with performance.',
-            'Extra',
-            'N/A',
-        ],
-        [
-            'his team performed a root cause',
-            'the old system: the relational database was overloaded and '
-                'could not handle either the scale of incoming requests or '
-                'the level of reliability.',
-            'Python',
-            '-',
-        ],
-    ]
-    print(get_table(L2))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--file', required=True,
+                        help='CSV file to render')
+    parser.add_argument('-H', '--header', action='store_true',
+                        help='Render first row as header')
+    parser.add_argument('-t', '--tsv', action='store_true',
+                        help='using TSV format instead of CSV')
+    args = parser.parse_args()
+
+    if not os.path.exists(args.file):
+        print('No such file: {}'.format(args.file))
+        exit(1)
+
+    L = []
+    with open(args.file, newline='') as f:
+        delimiter = '\t' if args.tsv else ','
+        reader = csv.reader(f, delimiter=delimiter)
+        for row in reader:
+            L.append(row)
+
+    ac = AsciiCells(header=args.header)
+    t = ac.render(L)
+    print(t)
