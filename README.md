@@ -96,11 +96,11 @@ So I have to write my own version.
 
 ## Tests and Pull Request
 
-As long as it generate neat tables, so yes, we have tests by eyes: just
-run `python test.py` and check its outputs.
+This tool works as long as it generate neat tables. So yes, we have tests
+by eyes: just run `python test.py` and check its outputs.
 
-Following KISS, I consider this tool is already feature completed. So only
-accept PRs with bug fixes or code improvements.
+Following KISS, I consider this tool as feature completed. So only accept
+PRs with bug fixes or code improvements.
 
 
 ## Author
