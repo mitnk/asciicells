@@ -7,10 +7,26 @@ This tool is based on latest Python3 (v3.5.0). It does support Python2.7,
 but this is an accident.
 
 
+## Install
+
+```bash
+$ sudo pip install asciicells
+```
+
+or
+
+```bash
+$ sudo python setup.py install
+```
+
+
 ## High level usages
 
+After installed, an executable `asciicells` would available for use.
+If not, please replace following examples with `python -m asciicells`.
+
 ```
-$ py asciicells.py -f demo.csv
+$ asciicells -f demo.csv
 
 +-----+---------+-----------+
 | No. | sample  | name      |
@@ -24,7 +40,7 @@ $ py asciicells.py -f demo.csv
 With header:
 
 ```
-$ py asciicells.py -f demo.csv -H
+$ asciicells -f demo.csv -H
 
 +-----+---------+-----------+
 | No. | sample  | name      |
@@ -35,7 +51,7 @@ $ py asciicells.py -f demo.csv -H
 +-----+---------+-----------+
 ```
 
-Also support TSV: `py asciicells.py -f demo.tsv -t -H`
+Also support TSV: `asciicells -f demo.tsv -t -H`
 
 
 ## Low level usages
