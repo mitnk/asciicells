@@ -75,10 +75,10 @@ for more examples.
 ## Why another ASCII table generator?
 
 When [needing an ASCII table](https://mitnk.com/unix/gdb/) generator,
-I googled some but they neither can
-[wrap long lines](https://ozh.github.io/ascii-tables/) in single table cell,
-nor [support quoted COMMAs](http://ascii.gallery/table) in csv file.
-So I have to write my own version.
+I googled some but they
+[neither can wrap long lines](https://ozh.github.io/ascii-tables/)
+in single table cell, [nor support quoted COMMAs](http://ascii.gallery/table)
+in csv file. So I have to write my own version.
 
 ```
 +--------------+----------------------------------------------+--------+
