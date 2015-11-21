@@ -9,7 +9,7 @@ but this is an accident.
 
 ## High level usages
 
-```bash
+```
 $ py asciicells.py -f demo.csv
 
 +-----+---------+-----------+
@@ -23,7 +23,7 @@ $ py asciicells.py -f demo.csv
 
 With header:
 
-```bash
+```
 $ py asciicells.py -f demo.csv -H
 
 +-----+---------+-----------+
@@ -58,12 +58,12 @@ for more examples.
 
 ## Why another ASCII table generator?
 
-When needing an ASCII table generator, I googled some but they either cannot
+When needing an ASCII table generator, I googled some but they neither cannot
 [wrap long lines](https://ozh.github.io/ascii-tables/) in single table cell,
 or [do not support quoted COMMAs](http://ascii.gallery/table) in csv file.
 So I have to write my own version.
 
-```bash
+```
 +--------------+----------------------------------------------+--------+
 | it must be   | In 2011, millions of people began to use the | Extra  |
 | indeed-cont- | China Railways website on a daily basis and  |        |
