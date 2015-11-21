@@ -1,21 +1,74 @@
 # via: https://github.com/pypa/sampleproject/blob/master/setup.py
+from setuptools import setup
 
-from setuptools import setup, find_packages
-from codecs import open
-from os import path
+DESC = """
+Home Page: https://github.com/mitnk/asciicells
 
-here = path.abspath(path.dirname(__file__))
+Install
+::
 
-# Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+    $ pip install asciicells
+
+
+High level usages
+-----------------
+
+After installed, an executable ``asciicells`` would available for use.
+If not, please replace following examples with ``python -m asciicells``.
+
+::
+
+    $ asciicells -f demo.csv
+
+    +-----+---------+-----------+
+    | No. | sample  | name      |
+    |     |         |           |
+    | 1   | a,b,c   | lettes    |
+    |     |         |           |
+    | 2   | + - x / | operators |
+    +-----+---------+-----------+
+
+With header:
+
+::
+
+    $ asciicells -f demo.csv -H
+
+    +-----+---------+-----------+
+    | No. | sample  | name      |
+    +-----+---------+-----------+
+    | 1   | a,b,c   | lettes    |
+    |     |         |           |
+    | 2   | + - x / | operators |
+    +-----+---------+-----------+
+
+Also support TSV: `asciicells -f demo.tsv -t -H`
+
+
+Low level usages
+----------------
+
+::
+
+    >>> import asciicells
+    >>> ac = asciicells.AsciiCells()
+    >>> L = [['a', 'b'], ['1', '2']]
+    >>> print(ac.render(L))
+    +---+---+
+    | a | b |
+    |   |   |
+    | 1 | 2 |
+    +---+---+
+
+More information: https://github.com/mitnk/asciicells
+"""
 
 setup(
     name='asciicells',
-    version='0.9.0',
+    version='0.9.2',
 
     description='A Simple ASCII Table Generator',
-    long_description=long_description,
+    long_description=DESC,
 
     url='https://github.com/mitnk/asciicells',
     author='mitnk',
@@ -42,6 +95,7 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
 
