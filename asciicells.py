@@ -7,7 +7,6 @@ MIT License
 
 import argparse
 import csv
-import fileinput
 import itertools
 import os.path
 import re
@@ -44,25 +43,25 @@ class AsciiCells(object):
                 row.append(' ')
 
         width_extra = len(info) * 3 + 1
-        info['width'] = sum(info.values()) + width_extra
-        if info['width'] > MAX_TABLE_WIDTH:
-            info['width'] = MAX_TABLE_WIDTH
+        table_width = sum(info.values()) + width_extra
+        if table_width > MAX_TABLE_WIDTH:
+            table_width = MAX_TABLE_WIDTH
 
         index_to_wrap = itertools.count()
-        while sum([info[i] for i in range(len(L[0]))]) > info['width'] - width_extra:
+        while sum(info.values()) > table_width - width_extra:
             index = next(index_to_wrap) % len(L[0])
             if info[index] <= MIN_CELL_WIDTH:
                 continue
             info[index] -= 1
-        return info
 
+        info['width'] = table_width
+        return info
 
     def _get_empty_row(self, token, char=' '):
         empty_row = re.sub(r'[^{}]'.format(VERTI), char, token)
         if char != ' ':
             empty_row = re.sub(r'[{}]'.format(VERTI), CROSS, empty_row)
         return empty_row
-
 
     def _hard_split(self, column, width, word_break=False):
         if word_break:
@@ -81,7 +80,6 @@ class AsciiCells(object):
         if index_split == 0:
             return self._hard_split(column, width, word_break=True)
         return column[:index_split], column[index_split:]
-
 
     def _get_normal_row(self, item_list, width_info):
         token = VERTI
@@ -109,13 +107,11 @@ class AsciiCells(object):
             token += ' {}{} {}'.format(str_curr, padding, VERTI)
         return token
 
-
     def _are_orphans_left(self):
         for k in self.orphans:
             if len(self.orphans[k]) > 0:
                 return True
         return False
-
 
     def render(self, L):
         info_w = self.get_width_info(L)

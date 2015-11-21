@@ -24,7 +24,7 @@ print(t)
 
 
 L = list(itertools.permutations(['7', 'ascii', 'this is a test'], 3))
-ac = AsciiCells()
+ac = AsciiCells(header=True)
 t = ac.render(L)
 print(t)
 
