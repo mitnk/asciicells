@@ -1,2 +1,5 @@
 *.pyc
 __pycache__/
+asciicells.egg-info/
+build/
+dist/

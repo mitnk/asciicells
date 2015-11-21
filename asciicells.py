@@ -1,8 +1,18 @@
 """
 A Simple ASCII Table Generator.
 
-By mitnk (w@mitnk.com)
-MIT License
+>>> import asciicells
+>>> ac = asciicells.AsciiCells()
+>>> L = [['a', 'b'], ['1', '2']]
+>>> print(ac.render(L))
++---+---+
+| a | b |
+|   |   |
+| 1 | 2 |
++---+---+
+
+More usage: https://github.com/mitnk/asciicells
+By mitnk (w@mitnk.com) under MIT License
 """
 
 import argparse
@@ -149,7 +159,7 @@ class AsciiCells(object):
         return '\n'.join(rows)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', required=True,
                         help='CSV file to render')
@@ -164,7 +174,7 @@ if __name__ == '__main__':
         exit(1)
 
     L = []
-    with open(args.file, newline='') as f:
+    with open(args.file) as f:
         delimiter = '\t' if args.tsv else ','
         reader = csv.reader(f, delimiter=delimiter)
         for row in reader:
@@ -173,3 +183,7 @@ if __name__ == '__main__':
     ac = AsciiCells(header=args.header)
     t = ac.render(L)
     print(t)
+
+
+if __name__ == '__main__':
+    main()
